@@ -30,7 +30,7 @@ export class ADBPermissions extends Models {
             }
         },
         {
-            prettyName: "Running Services", isShell: true, isPmGrant: true,needsRestart:true, permission: "android.permission.DUMP",
+            prettyName: "Running Services", isShell: true, isPmGrant: true, needsRestart: true, permission: "android.permission.DUMP",
             usedFor: {
                 "net.dinglisch.android.taskerm": "Checking what services are running on your device."
             }
@@ -93,11 +93,17 @@ export class ADBPermissions extends Models {
             }
         },
         {
-            prettyName: "Access Hidden APIs", isShell: true, isPmGrant: false, isSetting:true, needsRestart:true, permission: "hidden_api_policy",
+            prettyName: "Access Hidden APIs", isShell: true, isPmGrant: false, isSetting: true, needsRestart: true, permission: "hidden_api_policy",
             usedFor: {
                 "net.dinglisch.android.taskerm": "On devices running Android 11 and above this is needed for some actions like ADB Wifi or Mobile Network Type."
             }
         }/*,
+        {
+            prettyName: "Read Sensitive Notifications", isShell: true, isPmGrant: false, isSetting: false, needsRestart: false, permission: "RECEIVE_SENSITIVE_NOTIFICATIONS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "On devices running Android 15 and above this is needed in some situations to access the text of some notifications."
+            }
+        },
         {
             prettyName: "Accessibility Service", isShell: true, isPmGrant: true, permission: "android.permission.BIND_ACCESSIBILITY_SERVICE",
             usedFor: {
@@ -121,7 +127,7 @@ export class ADBPermissions extends Models {
     get modelClass() {
         return ADBPermission;
     }
-    get allGranted(){
+    get allGranted() {
         return this.find(permission => !permission.granted) ? false : true;
     }
 }
@@ -142,20 +148,20 @@ export class ADBPermission extends Model {
         const packageName = this.androidApp.packageName;
         let command = this.isShell ? "shell" : "";
         command += ` "`;
-        if(this.isSetting){
-            if(grant){
+        if (this.isSetting) {
+            if (grant) {
                 command += `settings put global ${this.permission} 1`;
-            }else{
+            } else {
                 command += `settings delete global ${this.permission}`;
             }
-        }else{
+        } else {
             command += this.isPmGrant ? `pm ${grant ? "grant" : "revoke"}` : "appops set";
             command += ` ${packageName} ${this.permission}`;
         }
         if (!this.isPmGrant && !this.isSetting) {
             command += " " + (grant ? "allow" : "deny");
         }
-        if(this.needsRestart && grant){
+        if (this.needsRestart && grant) {
             alert(`Granting the ${this.prettyName} permission will restart ${this.androidApp.name} on your Android device.`);
             command += ` & am force-stop ${packageName}`;
         }
@@ -244,9 +250,9 @@ export class ControlADBPermissions extends Control {
         this.elementGrantAllPermissions = await this.$(".adbPermissionGrantRevoke");
         this.elementGrantAllPermissionsContent = await this.$(".adbPermissionGrantRevokeContent");
         const allGranted = this.adbPermissions.allGranted;
-        UtilDOM.showOrHide(this.elementGrantAllPermissions,!allGranted)
+        UtilDOM.showOrHide(this.elementGrantAllPermissions, !allGranted)
         this.elementGrantAllPermissionsContent.innerHTML = "Grant All Permissions";
-        if(!allGranted){
+        if (!allGranted) {
             this.elementGrantAllPermissions.onclick = async () => {
                 this.elementGrantAllPermissionsContent.innerHTML = "Getting missing permissions...";
                 await EventBus.post(new RequestGrantAllPermissions());
@@ -305,7 +311,7 @@ export class ControlADBPermission extends Control {
         return this.adbPermission.granted;
     }
 }
-class RequestGrantAllPermissions {}
+class RequestGrantAllPermissions { }
 class RequestGrantRevokePermission {
     constructor({ adbPermission, grant }) {
         this.adbPermission = adbPermission;
